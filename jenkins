@@ -2,28 +2,25 @@ pipeline {
     agent any
 
     tools {
-        // Install Maven from the tool configuration
         maven 'Maven 3.6.3'  // Adjust the version as per your Jenkins Maven installation
     }
 
     environment {
-        // Define any environment variables, e.g., MAVEN_OPTS
         MAVEN_OPTS = '-Xmx1024m'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from the Git repository
                 checkout scm
+                sh 'ls -l'  // List files to verify if pom.xml is present
             }
         }
 
         stage('Build') {
             steps {
-                // Run Maven build
-                script {
-                    // Build using Maven's clean install command
+                // If the pom.xml is in a subdirectory
+                dir('project') {
                     sh 'mvn clean install'
                 }
             }
@@ -31,9 +28,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Run Maven tests
-                script {
-                    // Run tests using Maven
+                dir('project') {
                     sh 'mvn test'
                 }
             }
@@ -41,18 +36,15 @@ pipeline {
 
         stage('Archive Artifacts') {
             steps {
-                // Archive built artifacts (e.g., JAR or WAR files)
-                archiveArtifacts allowEmptyArchive: true, artifacts: '**/target/*.jar', followSymlinks: false
+                dir('project') {
+                    archiveArtifacts allowEmptyArchive: true, artifacts: '**/target/*.jar', followSymlinks: false
+                }
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    // Example deployment step (can be customized)
-                    // Deploy the artifact to a remote server, cloud, etc.
-                    echo "Deploying the artifact..."
-                }
+                echo "Deploying the artifact..."
             }
         }
     }
@@ -67,7 +59,7 @@ pipeline {
         }
 
         always {
-            cleanWs() // Clean up workspace after the build
+            cleanWs()
         }
     }
 }
