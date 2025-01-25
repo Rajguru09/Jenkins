@@ -1,21 +1,73 @@
 pipeline {
     agent any
+
+    tools {
+        // Install Maven from the tool configuration
+        maven 'Maven 3.6.3'  // Adjust the version as per your Jenkins Maven installation
+    }
+
+    environment {
+        // Define any environment variables, e.g., MAVEN_OPTS
+        MAVEN_OPTS = '-Xmx1024m'
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                // Checkout code from the Git repository
+                checkout scm
+            }
+        }
+
         stage('Build') {
             steps {
-                echo 'Building...'
+                // Run Maven build
+                script {
+                    // Build using Maven's clean install command
+                    sh 'mvn clean install'
+                }
             }
         }
+
         stage('Test') {
             steps {
-                echo 'Testing...'
+                // Run Maven tests
+                script {
+                    // Run tests using Maven
+                    sh 'mvn test'
+                }
             }
         }
+
+        stage('Archive Artifacts') {
+            steps {
+                // Archive built artifacts (e.g., JAR or WAR files)
+                archiveArtifacts allowEmptyArchive: true, artifacts: '**/target/*.jar', followSymlinks: false
+            }
+        }
+
         stage('Deploy') {
             steps {
-                echo 'Deploying...'
+                script {
+                    // Example deployment step (can be customized)
+                    // Deploy the artifact to a remote server, cloud, etc.
+                    echo "Deploying the artifact..."
+                }
             }
         }
     }
-}
 
+    post {
+        success {
+            echo 'Build and tests passed successfully!'
+        }
+
+        failure {
+            echo 'Build or tests failed.'
+        }
+
+        always {
+            cleanWs() // Clean up workspace after the build
+        }
+    }
+}
